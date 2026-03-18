@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Good Thinking Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg:       #f7f8fa;
+    --surface:  #ffffff;
+    --surface2: #f0f2f5;
+    --border:   #e2e5ea;
+    --accent:   #3a7d44;
+    --accent2:  #1d6fa4;
+    --accent3:  #c0622a;
+    --text:     #1a1d23;
+    --muted:    #7a7f8a;
+    --danger:   #c0392b;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 56px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px; letter-spacing: -0.3px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+    box-shadow: 0 0 6px rgba(58,125,68,0.3);
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .library-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--muted); background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .library-badge .count { color: var(--accent); font-weight: 500; }
+  .btn {
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 7px 16px; border-radius: 6px; border: none;
+    cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px;
+  }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-accent { background: var(--accent); color: #ffffff; font-weight: 600; }
+  .btn-accent:hover { background: #2d6235; transform: translateY(-1px); }
+
+  /* LAYOUT */
+  .app-body { display: flex; flex: 1; height: calc(100vh - 56px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 200px; min-width: 200px;
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 20px 0;
+  }
+  .nav-section-label {
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: 1.8px; text-transform: uppercase;
+    color: var(--text); padding: 0 20px 8px; margin-top: 16px;
+  }
+  .nav-section-label:first-child { margin-top: 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer; color: var(--muted);
+    font-size: 13px; font-weight: 500;
+    border-left: 2px solid transparent;
+    transition: all 0.15s; user-select: none;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(58,125,68,0.07); font-weight: 500; }
+  .nav-icon { width: 16px; text-align: center; font-size: 14px; opacity: 0.8; }
+  .nav-item .pill {
+    margin-left: auto; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 1px 7px; color: var(--muted);
+  }
+  .nav-item.active .pill {
+    background: rgba(58,125,68,0.1);
+    border-color: rgba(58,125,68,0.25); color: var(--accent);
+  }
+  .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+  .storage-bar-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .storage-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .storage-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 2px; transition: width 0.5s ease; opacity: 0.7; }
+
+  /* MAIN */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* PANELS */
+  .panel { display: none; flex: 1; flex-direction: column; }
+  .panel.active { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+
+  /* PANEL HEADER */
+  .panel-header {
+    padding: 28px 32px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+  }
+  .panel-title { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -0.3px; }
+  .panel-subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 400; }
+  .panel-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; padding-top: 4px; }
+  .panel-body { padding: 28px 32px; flex: 1; }
+
+  /* DASHBOARD */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px; transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-label { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text); margin-bottom: 10px; }
+  .stat-value { font-family: 'Inter', sans-serif; font-size: 30px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.accent2 { color: var(--accent2); }
+  .stat-value.accent3 { color: var(--accent3); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .section-title { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text); margin-bottom: 14px; }
+  .recent-papers { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 28px; }
+  .recent-paper-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    transition: background 0.15s; cursor: pointer;
+  }
+  .recent-paper-item:last-child { border-bottom: none; }
+  .recent-paper-item:hover { background: var(--surface2); }
+  .paper-index { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); min-width: 24px; }
+  .paper-info { flex: 1; }
+  .paper-title-sm { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .paper-meta-sm { font-size: 11px; color: var(--muted); font-weight: 400; font-family: 'Inter', sans-serif; }
+  .paper-tags-sm { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 10px; font-family: 'Inter', sans-serif; font-weight: 500; padding: 3px 10px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+  .tag.green { background: rgba(58,125,68,0.08); border-color: rgba(58,125,68,0.25); color: var(--accent); }
+  .tag.blue  { background: rgba(29,111,164,0.08); border-color: rgba(29,111,164,0.25); color: var(--accent2); }
+  .tag.orange{ background: rgba(192,98,42,0.08); border-color: rgba(192,98,42,0.25); color: var(--accent3); }
+
+  /* UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 56px 32px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--surface); margin-bottom: 24px;
+  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(58,125,68,0.04); }
+  .upload-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.5; }
+  .upload-title { font-family: 'Inter', sans-serif; font-size: 20px; margin-bottom: 8px; color: var(--text); }
+  .upload-sub { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .upload-sub span { color: var(--accent); font-weight: 500; }
+  .input-hidden { display: none; }
+  .processing-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .process-step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+  .step-num { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .step-label { font-size: 12px; font-weight: 700; color: var(--text); }
+  .step-desc { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .step-icon { font-size: 22px; margin-bottom: 8px; }
+
+  /* LIBRARY */
+  .library-toolbar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+  .search-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 14px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .filter-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 14px; color: var(--muted); font-size: 12px; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  .paper-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-bottom: 12px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .paper-card:hover { border-color: var(--accent2); transform: translateY(-1px); }
+  .paper-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .paper-card-title { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); flex: 1; }
+  .confirmed-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 4px; background: rgba(58,125,68,0.1); border: 1px solid rgba(58,125,68,0.3); color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+  .pending-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 4px; background: rgba(192,98,42,0.1); border: 1px solid rgba(192,98,42,0.3); color: var(--accent3); white-space: nowrap; flex-shrink: 0; }
+  .paper-card-authors { font-size: 12px; color: var(--muted); font-weight: 400; margin-bottom: 8px; font-family: 'Inter', sans-serif; }
+  .paper-card-summary { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .paper-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .paper-card-tags { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .paper-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; color: var(--muted); font-size: 12px; cursor: pointer;
+    transition: all 0.15s; font-family: 'Inter', sans-serif;
+  }
+  .icon-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .icon-btn-danger { color: var(--danger) !important; }
+  .icon-btn-danger:hover { border-color: var(--danger) !important; color: var(--danger) !important; background: rgba(192,57,43,0.06) !important; }
+
+  /* RETRIEVAL */
+  .retrieval-search-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .retrieval-label { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text); margin-bottom: 10px; }
+  .retrieval-textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6;
+    resize: vertical; outline: none; min-height: 80px; transition: border-color 0.2s;
+  }
+  .retrieval-textarea:focus { border-color: var(--accent); }
+  .retrieval-textarea::placeholder { color: var(--muted); }
+  .retrieval-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+  .retrieval-hint { font-size: 11px; color: var(--muted); }
+  .results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; cursor: pointer; transition: all 0.2s; }
+  .result-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .result-relevance { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .relevance-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .relevance-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+  .relevance-pct { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); min-width: 32px; text-align: right; }
+  .result-title { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
+  .result-snippet { font-size: 11px; color: var(--muted); line-height: 1.6; }
+
+  /* CONTENT STUDIO */
+  .content-formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .format-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 16px; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .format-card:hover, .format-card.active { border-color: var(--accent2); background: rgba(110,181,240,0.06); }
+  .format-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.6; }
+  .format-card.active .format-icon { opacity: 1; }
+  .format-name { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .format-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .content-output { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; min-height: 200px; padding: 24px; display: flex; align-items: center; justify-content: center; }
+  .output-placeholder { text-align: center; color: var(--muted); }
+  .output-placeholder-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+  .output-placeholder-text { font-size: 13px; line-height: 1.6; }
+
+  /* EMPTY STATE */
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 32px; text-align: center; color: var(--muted); flex: 1; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-title { font-family: 'Inter', sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; font-weight: 400; }
+  .empty-sub { font-size: 13px; line-height: 1.6; max-width: 320px; }
+
+  /* MODAL BASE */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 680px; max-width: 95vw; max-height: 85vh; overflow-y: auto; padding: 28px; animation: modalIn 0.2s ease; }
+  @keyframes modalIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: scale(1) translateY(0); } }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .modal-title { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; line-height: 1.3; }
+  .modal-close { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 16px; flex-shrink: 0; transition: all 0.15s; }
+  .modal-close:hover { border-color: var(--danger); color: var(--danger); }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* PROCESSING OVERLAY */
+  .processing-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
+  .processing-overlay.open { display: flex; }
+  .processing-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px 48px; text-align: center; min-width: 360px; }
+  .processing-spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-title { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .processing-status { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; min-height: 18px; }
+  .processing-steps-track { display: flex; gap: 6px; justify-content: center; margin-top: 20px; }
+  .track-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .track-dot.done { background: var(--accent); }
+  .track-dot.active { background: var(--accent2); }
+
+  /* REVIEW MODAL */
+  .review-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 780px; max-width: 96vw; max-height: 90vh; overflow-y: auto; padding: 32px; animation: modalIn 0.25s ease; }
+  .review-section { margin-bottom: 22px; }
+  .review-section-label { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text); margin-bottom: 8px; }
+  .review-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+  .review-input:focus { border-color: var(--accent); }
+  .review-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; outline: none; resize: vertical; line-height: 1.6; transition: border-color 0.2s; }
+  .review-textarea:focus { border-color: var(--accent); }
+  .review-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .array-field { display: flex; flex-direction: column; gap: 6px; }
+  .array-item { display: flex; gap: 8px; align-items: flex-start; }
+  .array-item-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 12px; outline: none; resize: none; line-height: 1.5; transition: border-color 0.2s; }
+  .array-item-input:focus { border-color: var(--accent); }
+  .array-remove-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 12px; flex-shrink: 0; margin-top: 2px; transition: all 0.15s; }
+  .array-remove-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .array-add-btn { background: transparent; border: 1px dashed var(--border); border-radius: 6px; padding: 6px 12px; color: var(--muted); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; text-align: left; }
+  .array-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tags-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; min-height: 42px; cursor: text; transition: border-color 0.2s; }
+  .tags-input-wrap:focus-within { border-color: var(--accent); }
+  .tag-chip { display: flex; align-items: center; gap: 4px; background: rgba(58,125,68,0.08); border: 1px solid rgba(58,125,68,0.25); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500; color: var(--accent); }
+  .tag-chip-remove { cursor: pointer; opacity: 0.6; font-size: 10px; }
+  .tag-chip-remove:hover { opacity: 1; }
+  .tag-text-input { background: transparent; border: none; outline: none; color: var(--text); font-family: 'Inter', sans-serif; font-size: 12px; min-width: 100px; flex: 1; }
+  .apa-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.7; word-break: break-word; }
+  .review-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .btn-confirm { background: var(--accent); color: #0e0f11; font-weight: 700; font-size: 13px; padding: 10px 24px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .btn-confirm:hover { background: #2d6235; transform: translateY(-1px); }
+  .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--danger); font-size: 13px; padding: 10px 18px; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+  .btn-danger:hover { border-color: var(--danger); }
+
+
+  /* RETRIEVAL RESULTS */
+  .retrieval-loading {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 48px 32px; gap: 14px;
+  }
+  .retrieval-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .retrieval-loading-text {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
+  }
+
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .results-count {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
+  }
+  .results-count span { color: var(--accent2); font-weight: 500; }
+
+  .result-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 14px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .result-card:hover { border-color: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(110,181,240,0.08); }
+
+  .result-card-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px;
+  }
+  .result-card-title {
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); flex: 1;
+  }
+  .result-card-meta {
+    font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 10px;
+  }
+
+  .relevance-badge {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .relevance-score {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    color: var(--accent2);
+  }
+  .relevance-ring {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .relevance-high { background: rgba(58,125,68,0.1); border: 2px solid var(--accent); color: var(--accent); }
+  .relevance-med  { background: rgba(29,111,164,0.1); border: 2px solid var(--accent2); color: var(--accent2); }
+  .relevance-low  { background: rgba(122,127,138,0.08); border: 2px solid var(--border); color: var(--muted); }
+
+  .result-why {
+    background: var(--surface2); border-left: 3px solid var(--accent2);
+    border-radius: 0 6px 6px 0; padding: 10px 14px;
+    font-size: 12px; color: var(--text); line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .result-why-label {
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--accent2); margin-bottom: 4px;
+  }
+
+  .result-supporting {
+    margin-bottom: 12px;
+  }
+  .result-supporting-label {
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--text); margin-bottom: 6px;
+  }
+  .result-supporting-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 4px;
+  }
+  .result-supporting-item::before {
+    content: '→'; color: var(--accent); flex-shrink: 0; margin-top: 1px;
+  }
+
+  .result-card-footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .result-tags { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+  .result-actions { display: flex; gap: 6px; }
+
+  .synthesis-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 20px;
+  }
+  .synthesis-label {
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.6px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .synthesis-label::after {
+    content: ''; flex: 1; height: 1px; background: rgba(58,125,68,0.15);
+  }
+  .synthesis-text {
+    font-size: 13px; line-height: 1.8; color: var(--text);
+  }
+
+
+  /* CONTENT STUDIO */
+  .content-top-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 8px;
+  }
+  .content-col { display: flex; flex-direction: column; gap: 12px; }
+
+  .content-formats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  .format-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 8px; cursor: pointer;
+    transition: all 0.2s; text-align: center;
+  }
+  .format-card:hover, .format-card.active {
+    border-color: var(--accent2); background: rgba(29,111,164,0.05);
+  }
+  .format-icon { font-size: 22px; margin-bottom: 6px; opacity: 0.7; }
+  .format-card.active .format-icon { opacity: 1; }
+  .format-name { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .format-desc { font-size: 10px; color: var(--muted); line-height: 1.3; }
+
+  .source-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .source-tab {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 14px; font-size: 12px;
+    cursor: pointer; color: var(--muted); font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .source-tab.active { background: rgba(58,125,68,0.08); border-color: rgba(58,125,68,0.3); color: var(--accent); }
+
+  .content-paper-list {
+    max-height: 160px; overflow-y: auto;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 10px;
+  }
+  .content-paper-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .content-paper-item:last-child { border-bottom: none; }
+  .content-paper-item:hover { background: var(--surface); }
+  .content-paper-item.selected { background: rgba(58,125,68,0.07); }
+  .content-paper-radio {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0; transition: all 0.15s;
+  }
+  .content-paper-item.selected .content-paper-radio {
+    border-color: var(--accent); background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(58,125,68,0.15);
+  }
+  .content-paper-info { flex: 1; min-width: 0; }
+  .content-paper-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .content-paper-year { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  .content-generate-btn { width: 100%; margin-top: 4px; padding: 10px; font-size: 13px; }
+
+  /* OUTPUT AREA */
+  .content-output-area {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; min-height: 220px;
+  }
+  .output-placeholder {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 48px 32px; text-align: center; color: var(--muted);
+  }
+  .output-placeholder-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+  .output-placeholder-text { font-size: 13px; line-height: 1.6; }
+
+  .content-generating {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 48px 32px; gap: 14px;
+  }
+  .content-generating-spinner {
+    width: 36px; height: 36px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .content-generating-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  /* SOCIAL OUTPUT */
+  .output-social {
+    padding: 24px;
+  }
+  .output-block {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px; margin-bottom: 14px;
+  }
+  .output-block-label {
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.6px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+  }
+  .output-block-text {
+    font-size: 13px; line-height: 1.8; color: var(--text); white-space: pre-wrap;
+  }
+  .output-block-hashtags {
+    font-size: 12px; color: var(--accent2); line-height: 1.8; margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .output-actions {
+    display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;
+  }
+
+  /* PODCAST OUTPUT */
+  .output-podcast { padding: 24px; }
+  .podcast-segment {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-bottom: 12px;
+  }
+  .podcast-segment-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .podcast-segment-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(58,125,68,0.1); border: 1px solid rgba(58,125,68,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+  }
+  .podcast-segment-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+  }
+  .podcast-segment-duration {
+    margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+  }
+  .podcast-point {
+    display: flex; gap: 8px; font-size: 12px; color: var(--muted);
+    line-height: 1.6; margin-bottom: 5px;
+  }
+  .podcast-point::before { content: '·'; color: var(--accent); flex-shrink: 0; }
+
+  /* YOUTUBE OUTPUT */
+  .output-youtube { padding: 24px; }
+  .yt-section {
+    margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  }
+  .yt-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .yt-section-label {
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.6px;
+    text-transform: uppercase; color: var(--accent3); margin-bottom: 6px;
+  }
+  .yt-section-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .yt-point {
+    display: flex; gap: 8px; font-size: 12px; color: var(--muted);
+    line-height: 1.6; margin-bottom: 4px;
+  }
+  .yt-point::before { content: '→'; color: var(--accent3); flex-shrink: 0; }
+  .yt-timestamp {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 6px; margin-left: 6px;
+  }
+
+  /* LIVE REFERENCE OUTPUT */
+  .output-live { padding: 24px; }
+  .live-card {
+    background: linear-gradient(135deg, rgba(58,125,68,0.04), rgba(29,111,164,0.04));
+    border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px;
+  }
+  .live-card-title {
+    font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+    color: var(--text); margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .live-bullet {
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 8px;
+  }
+  .live-bullet-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    flex-shrink: 0; margin-top: 6px;
+  }
+  .live-stat {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent2);
+    background: rgba(110,181,240,0.1); border: 1px solid rgba(110,181,240,0.2);
+    border-radius: 4px; padding: 2px 8px; margin-top: 4px; display: inline-block;
+  }
+  .live-source {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+    margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 8px; padding: 12px 18px; font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 8px; z-index: 999; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <span class="logo-dot"></span>
+    The Good Thinking Stack
+  </div>
+  <div class="topbar-right">
+    <div class="library-badge">
+      Library &nbsp;·&nbsp; <span class="count" id="paperCount">0</span> papers
+    </div>
+    <button class="btn btn-ghost" id="btnLoadLibrary">↑ Load Library</button>
+    <button class="btn btn-accent" id="btnExportLibrary">↓ Export JSON</button>
+    <input type="file" id="libraryFileInput" class="input-hidden" accept=".json">
+  </div>
+</div>
+
+<!-- APP BODY -->
+<div class="app-body">
+  <nav class="sidebar">
+    <div class="nav-section-label">Workspace</div>
+    <div class="nav-item active" data-panel="dashboard"><span class="nav-icon">⊡</span> Dashboard</div>
+    <div class="nav-item" data-panel="upload"><span class="nav-icon">↑</span> Add Paper</div>
+    <div class="nav-section-label">Research</div>
+    <div class="nav-item" data-panel="library"><span class="nav-icon">▤</span> Library <span class="pill" id="libCount">0</span></div>
+    <div class="nav-item" data-panel="retrieval"><span class="nav-icon">◎</span> Retrieval</div>
+    <div class="nav-section-label">Create</div>
+    <div class="nav-item" data-panel="content"><span class="nav-icon">✦</span> Content Studio</div>
+    <div class="sidebar-footer">
+      <div class="storage-bar-label"><span>Library size</span><span id="storageLabel">0 KB</span></div>
+      <div class="storage-bar"><div class="storage-bar-fill" id="storageBarFill"></div></div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="panel-header">
+        <div><div class="panel-title">Dashboard</div><div class="panel-subtitle">Your research at a glance</div></div>
+        <div class="panel-actions"><button class="btn btn-ghost" onclick="switchPanel('upload')">+ Add Paper</button></div>
+      </div>
+      <div class="panel-body">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">Total Papers</div><div class="stat-value accent" id="stat-total">0</div><div class="stat-sub">in your library</div></div>
+          <div class="stat-card"><div class="stat-label">Confirmed</div><div class="stat-value" id="stat-confirmed">0</div><div class="stat-sub">reviewed &amp; tagged</div></div>
+          <div class="stat-card"><div class="stat-label">Pending Review</div><div class="stat-value accent3" id="stat-pending">0</div><div class="stat-sub">awaiting confirmation</div></div>
+          <div class="stat-card"><div class="stat-label">Unique Tags</div><div class="stat-value accent2" id="stat-tags">0</div><div class="stat-sub">topics &amp; themes</div></div>
+        </div>
+        <div class="section-title">Recent Papers</div>
+        <div class="recent-papers" id="recentPapers"></div>
+        <div class="section-title">Top Tags</div>
+        <div id="topTags" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+
+    <!-- ADD PAPER -->
+    <div class="panel" id="panel-upload">
+      <div class="panel-header">
+        <div><div class="panel-title">Add Paper</div><div class="panel-subtitle">Upload a PDF — Claude will extract, summarise and tag it for you</div></div>
+      </div>
+      <div class="panel-body">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="pdfFileInput" class="input-hidden" accept=".pdf">
+          <div class="upload-icon">📄</div>
+          <div class="upload-title">Drop your PDF here</div>
+          <div class="upload-sub">or <span>click to browse</span> · PDF files only<br>Claude will read the full paper and extract structured metadata</div>
+        </div>
+        <div class="processing-steps">
+          <div class="process-step"><div class="step-icon">📂</div><div class="step-num">Step 01</div><div class="step-label">Upload PDF</div><div class="step-desc">Select your PDF file from your disc</div></div>
+          <div class="process-step"><div class="step-icon">🔍</div><div class="step-num">Step 02</div><div class="step-label">Extract Text</div><div class="step-desc">Text extracted in-browser — PDF never leaves your device</div></div>
+          <div class="process-step"><div class="step-icon">🤖</div><div class="step-num">Step 03</div><div class="step-label">Claude Analyses</div><div class="step-desc">Summary, findings, tags &amp; APA reference generated</div></div>
+          <div class="process-step"><div class="step-icon">✅</div><div class="step-num">Step 04</div><div class="step-label">You Confirm</div><div class="step-desc">Review, edit &amp; confirm before saving to library</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIBRARY -->
+    <div class="panel" id="panel-library">
+      <div class="panel-header">
+        <div><div class="panel-title">Library</div><div class="panel-subtitle">All your confirmed and pending papers</div></div>
+        <div class="panel-actions"><button class="btn btn-ghost" onclick="switchPanel('upload')">+ Add Paper</button></div>
+      </div>
+      <div class="panel-body">
+        <div class="library-toolbar">
+          <input class="search-input" placeholder="Search by title, author, keyword…" id="librarySearch">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="confirmed">Confirmed</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+        </div>
+        <div id="libraryList"></div>
+      </div>
+    </div>
+
+    <!-- RETRIEVAL -->
+    <div class="panel" id="panel-retrieval">
+      <div class="panel-header">
+        <div><div class="panel-title">Retrieval</div><div class="panel-subtitle">Ask a research question — find the most relevant papers</div></div>
+      </div>
+      <div class="panel-body">
+        <div class="retrieval-search-box">
+          <div class="retrieval-label">Research Question</div>
+          <textarea class="retrieval-textarea" id="retrievalQuery" placeholder="e.g. What does the literature say about the relationship between attachment style and social media use in young adults?"></textarea>
+          <div class="retrieval-footer">
+            <span class="retrieval-hint">Claude reasons across your full library · <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:10px;">⌘ Enter</kbd> to search</span>
+            <button class="btn btn-accent" id="btnRetrieve">Find Papers →</button>
+          </div>
+        </div>
+        <div id="retrievalResults">
+          <div class="empty-state" style="padding:40px 0;">
+            <div class="empty-icon">◎</div>
+            <div class="empty-title">Enter a research question above</div>
+            <div class="empty-sub">Results will show matched papers with relevance scores and key supporting points.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT STUDIO -->
+    <div class="panel" id="panel-content">
+      <div class="panel-header">
+        <div><div class="panel-title">Content Studio</div><div class="panel-subtitle">Turn your research into content for any platform</div></div>
+      </div>
+      <div class="panel-body">
+
+        <!-- ROW 1: Format + Source side by side -->
+        <div class="content-top-row">
+
+          <!-- Format picker -->
+          <div class="content-col">
+            <div class="section-title">Format</div>
+            <div class="content-formats">
+              <div class="format-card active" data-format="social"><div class="format-icon">📱</div><div class="format-name">Social Caption</div><div class="format-desc">Instagram &amp; LinkedIn</div></div>
+              <div class="format-card" data-format="podcast"><div class="format-icon">🎙️</div><div class="format-name">Podcast Points</div><div class="format-desc">Narrative talking points</div></div>
+              <div class="format-card" data-format="youtube"><div class="format-icon">🎬</div><div class="format-name">YouTube Outline</div><div class="format-desc">Script with segments</div></div>
+              <div class="format-card" data-format="live"><div class="format-icon">📋</div><div class="format-name">Live Reference</div><div class="format-desc">Instagram Live card</div></div>
+            </div>
+          </div>
+
+          <!-- Source picker -->
+          <div class="content-col">
+            <div class="section-title">Source</div>
+            <div class="source-tabs">
+              <button class="source-tab active" data-source="paper">Single Paper</button>
+              <button class="source-tab" data-source="topic">By Topic</button>
+            </div>
+
+            <!-- Single paper picker -->
+            <div id="sourcePaperPicker">
+              <input class="search-input" id="contentPaperSearch" placeholder="Search papers by title or tag…" style="margin-bottom:8px;">
+              <div id="contentPaperList" class="content-paper-list"></div>
+            </div>
+
+            <!-- Topic input -->
+            <div id="sourceTopicPicker" style="display:none;">
+              <textarea class="review-textarea" id="contentTopicInput" rows="3" placeholder="e.g. How does sleep deprivation affect emotional regulation in adolescents?&#10;&#10;Claude will draw from all confirmed papers relevant to this topic."></textarea>
+            </div>
+
+            <button class="btn btn-accent content-generate-btn" id="btnGenerate">Generate ✦</button>
+          </div>
+        </div>
+
+        <!-- Output area -->
+        <div class="section-title" style="margin-top:24px;">Output</div>
+        <div id="contentOutput" class="content-output-area">
+          <div class="output-placeholder">
+            <div class="output-placeholder-icon">✦</div>
+            <div class="output-placeholder-text">Choose a format, select a paper or topic,<br>then click Generate.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PROCESSING OVERLAY -->
+<div class="processing-overlay" id="processingOverlay">
+  <div class="processing-card">
+    <div class="processing-spinner"></div>
+    <div class="processing-title">Analysing Paper</div>
+    <div class="processing-status" id="processingStatus">Extracting text from PDF…</div>
+    <div class="processing-steps-track">
+      <div class="track-dot active" id="dot0"></div>
+      <div class="track-dot" id="dot1"></div>
+      <div class="track-dot" id="dot2"></div>
+      <div class="track-dot" id="dot3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="review-modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Review &amp; Confirm Paper</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Edit any field below before saving to your library</div>
+      </div>
+      <div class="modal-close" onclick="closeReviewModal()">✕</div>
+    </div>
+    <div class="review-section">
+      <div class="review-section-label">APA 7th Reference (auto-generated)</div>
+      <div class="apa-box" id="reviewAPA"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="review-section">
+      <div class="review-section-label">Title</div>
+      <input class="review-input" id="reviewTitle" type="text" placeholder="Paper title">
+    </div>
+    <div class="review-section review-grid-2">
+      <div>
+        <div class="review-section-label">Authors (comma-separated)</div>
+        <input class="review-input" id="reviewAuthors" type="text" placeholder="Smith, J., Jones, A.">
+      </div>
+      <div>
+        <div class="review-section-label">Year</div>
+        <input class="review-input" id="reviewYear" type="text" placeholder="2023">
+      </div>
+    </div>
+    <div class="review-section review-grid-2">
+      <div>
+        <div class="review-section-label">Journal / Source</div>
+        <input class="review-input" id="reviewJournal" type="text" placeholder="Journal of Psychology">
+      </div>
+      <div>
+        <div class="review-section-label">DOI</div>
+        <input class="review-input" id="reviewDOI" type="text" placeholder="10.xxxx/xxxxx">
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="review-section">
+      <div class="review-section-label">Summary</div>
+      <textarea class="review-textarea" id="reviewSummary" rows="3" placeholder="Plain-language summary of the paper"></textarea>
+    </div>
+    <div class="review-section">
+      <div class="review-section-label">Methodology</div>
+      <textarea class="review-textarea" id="reviewMethodology" rows="2" placeholder="Study design, sample, measures used"></textarea>
+    </div>
+    <div class="divider"></div>
+    <div class="review-section">
+      <div class="review-section-label">Key Findings</div>
+      <div class="array-field" id="findingsField"></div>
+      <button class="array-add-btn" onclick="addArrayItem('findings')">+ Add finding</button>
+    </div>
+    <div class="review-section">
+      <div class="review-section-label">Limitations</div>
+      <div class="array-field" id="limitationsField"></div>
+      <button class="array-add-btn" onclick="addArrayItem('limitations')">+ Add limitation</button>
+    </div>
+    <div class="review-section">
+      <div class="review-section-label">Implications</div>
+      <div class="array-field" id="implicationsField"></div>
+      <button class="array-add-btn" onclick="addArrayItem('implications')">+ Add implication</button>
+    </div>
+    <div class="review-section">
+      <div class="review-section-label">Content Hooks (plain-language, quotable insights)</div>
+      <div class="array-field" id="hooksField"></div>
+      <button class="array-add-btn" onclick="addArrayItem('hooks')">+ Add hook</button>
+    </div>
+    <div class="divider"></div>
+    <div class="review-section">
+      <div class="review-section-label">Tags (press Enter or comma to add)</div>
+      <div class="tags-input-wrap" id="tagsWrap" onclick="document.getElementById('tagInput').focus()">
+        <input class="tag-text-input" id="tagInput" placeholder="Add a tag…">
+      </div>
+    </div>
+    <div class="review-actions">
+      <button class="btn-danger" onclick="closeReviewModal()">Discard</button>
+      <button class="btn btn-ghost" onclick="savePaper(false)">Save as Pending</button>
+      <button class="btn-confirm" onclick="savePaper(true)">✓ Confirm &amp; Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAPER DETAIL MODAL -->
+<div class="modal-overlay" id="paperModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Paper Title</div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div id="modalBody">
+      <p style="color:var(--muted);font-size:13px;">Paper details will appear here.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Action completed</span>
+</div>
+
+<script>
+// ── STATE ──
+let library = [];
+let currentTags = [];
+let currentEditingId = null;
+
+// PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── NAVIGATION ──
+function switchPanel(name) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.panel === name));
+  document.querySelectorAll('.panel').forEach(el => el.classList.toggle('active', el.id === 'panel-' + name));
+}
+document.querySelectorAll('.nav-item').forEach(el => el.addEventListener('click', () => {
+  switchPanel(el.dataset.panel);
+  if (el.dataset.panel === 'content') renderContentPaperList();
+}));
+
+// ── FORMAT CARDS ──
+document.querySelectorAll('.format-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.format-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  });
+});
+
+// ── LIBRARY FILTER BUTTONS ──
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderLibrary(btn.dataset.filter);
+  });
+});
+
+// ── LIBRARY SEARCH ──
+document.getElementById('librarySearch').addEventListener('input', e => {
+  renderLibrary('all', e.target.value);
+});
+
+// ── UPLOAD ZONE ──
+const uploadZone = document.getElementById('uploadZone');
+const pdfInput   = document.getElementById('pdfFileInput');
+
+uploadZone.addEventListener('click', () => pdfInput.click());
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') processPDF(file);
+  else showToast('Please drop a PDF file');
+});
+pdfInput.addEventListener('change', () => {
+  if (pdfInput.files[0]) processPDF(pdfInput.files[0]);
+});
+
+// ── PDF PROCESSING ──
+async function processPDF(file) {
+  showProcessingOverlay();
+  try {
+    // Step 1: Extract text
+    setProcessingStep(0, 'Extracting text from PDF…');
+    const text = await extractTextFromPDF(file);
+    if (!text || text.trim().length < 100) {
+      hideProcessingOverlay();
+      showToast('Could not extract enough text from this PDF');
+      return;
+    }
+
+    // Step 2: Send to Claude
+    setProcessingStep(1, 'Sending to Claude for analysis…');
+    const result = await analyseWithClaude(text, file.name);
+
+    // Step 3: Parsing
+    setProcessingStep(2, 'Parsing structured data…');
+    await sleep(400);
+
+    // Step 4: Opening review
+    setProcessingStep(3, 'Opening review panel…');
+    await sleep(300);
+
+    hideProcessingOverlay();
+    openReviewModal(result);
+
+  } catch (err) {
+    hideProcessingOverlay();
+    showToast('Error: ' + (err.message || 'Something went wrong'));
+    console.error(err);
+  }
+  // Reset input so same file can be re-uploaded
+  pdfInput.value = '';
+}
+
+async function extractTextFromPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  const maxPages = Math.min(pdf.numPages, 40); // cap at 40 pages
+  for (let i = 1; i <= maxPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(' ') + '\n';
+  }
+  return text;
+}
+
+async function analyseWithClaude(text, filename) {
+  // Truncate to ~12000 chars to stay within token limits
+  const truncated = text.length > 12000 ? text.substring(0, 12000) + '\n[...truncated for length]' : text;
+
+  const prompt = `You are a research assistant specialising in psychology. Analyse the following academic paper and return ONLY a valid JSON object with no additional text, preamble, or markdown formatting.
+
+The JSON must follow this exact schema:
+{
+  "title": "Full paper title",
+  "authors": ["Last, F. M.", "Last, F. M."],
+  "year": "YYYY",
+  "journal": "Journal name",
+  "volume": "volume number or empty string",
+  "issue": "issue number or empty string",
+  "pages": "page range or empty string",
+  "doi": "DOI string or empty string",
+  "abstract": "The abstract verbatim or a close paraphrase",
+  "summary": "A clear 3-5 sentence plain-language summary of what this paper is about and what it found",
+  "methodology": "2-3 sentences describing the study design, sample size, measures and analytical approach",
+  "findings": [
+    "Finding 1 — specific and concrete, include statistics where available",
+    "Finding 2",
+    "Finding 3"
+  ],
+  "limitations": [
+    "Limitation 1",
+    "Limitation 2"
+  ],
+  "implications": [
+    "Implication 1 — practical or theoretical",
+    "Implication 2"
+  ],
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "content_hooks": [
+    "A punchy, plain-English insight that would work well on social media or a podcast",
+    "Another hook — surprising, relatable or counterintuitive"
+  ]
+}
+
+Rules:
+- authors array: format each as "Last, F. M." (APA style)
+- tags: 5-10 lowercase topic/theme/construct keywords
+- content_hooks: write these for a general audience, not academics — make them compelling
+- findings, limitations, implications: minimum 2 items each, maximum 8 each
+- Return ONLY the JSON object, no markdown, no explanation
+
+Paper text:
+${truncated}`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error?.message || 'API request failed');
+  }
+
+  const data = await response.json();
+  const raw = data.content.map(b => b.text || '').join('');
+  const clean = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(clean);
+  } catch {
+    throw new Error('Claude returned invalid JSON — please try again');
+  }
+
+  // Build APA reference
+  const authors = (parsed.authors || []);
+  let authorStr = '';
+  if (authors.length === 1) authorStr = authors[0];
+  else if (authors.length === 2) authorStr = authors.join(', & ');
+  else if (authors.length > 2) authorStr = authors.slice(0, -1).join(', ') + ', & ' + authors[authors.length - 1];
+
+  let apa = `${authorStr} (${parsed.year || 'n.d.'}). ${parsed.title}.`;
+  if (parsed.journal) {
+    apa += ` ${parsed.journal}`;
+    if (parsed.volume) apa += `, ${parsed.volume}`;
+    if (parsed.issue) apa += `(${parsed.issue})`;
+    if (parsed.pages) apa += `, ${parsed.pages}`;
+    apa += '.';
+  }
+  if (parsed.doi) apa += ` https://doi.org/${parsed.doi}`;
+
+  parsed.apa_reference = apa;
+  parsed.id = 'paper_' + Date.now();
+  parsed.confirmed = false;
+  parsed.date_added = new Date().toISOString().split('T')[0];
+
+  return parsed;
+}
+
+// ── PROCESSING OVERLAY ──
+function showProcessingOverlay() {
+  document.getElementById('processingOverlay').classList.add('open');
+  ['dot0','dot1','dot2','dot3'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = 'track-dot' + (i === 0 ? ' active' : '');
+  });
+}
+
+function hideProcessingOverlay() {
+  document.getElementById('processingOverlay').classList.remove('open');
+}
+
+function setProcessingStep(step, message) {
+  document.getElementById('processingStatus').textContent = message;
+  ['dot0','dot1','dot2','dot3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (i < step) el.className = 'track-dot done';
+    else if (i === step) el.className = 'track-dot active';
+    else el.className = 'track-dot';
+  });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── REVIEW MODAL ──
+function openReviewModal(paper) {
+  currentEditingId = paper.id || null;
+  currentTags = [...(paper.tags || [])];
+
+  document.getElementById('reviewAPA').textContent = paper.apa_reference || '';
+  document.getElementById('reviewTitle').value = paper.title || '';
+  document.getElementById('reviewAuthors').value = (paper.authors || []).join(', ');
+  document.getElementById('reviewYear').value = paper.year || '';
+  document.getElementById('reviewJournal').value = paper.journal || '';
+  document.getElementById('reviewDOI').value = paper.doi || '';
+  document.getElementById('reviewSummary').value = paper.summary || '';
+  document.getElementById('reviewMethodology').value = paper.methodology || '';
+
+  renderArrayField('findingsField', paper.findings || [], 'findings');
+  renderArrayField('limitationsField', paper.limitations || [], 'limitations');
+  renderArrayField('implicationsField', paper.implications || [], 'implications');
+  renderArrayField('hooksField', paper.content_hooks || [], 'hooks');
+  renderTagChips();
+
+  // Store the full paper object temporarily
+  document.getElementById('reviewModal')._paper = paper;
+  document.getElementById('reviewModal').classList.add('open');
+}
+
+function closeReviewModal() {
+  document.getElementById('reviewModal').classList.remove('open');
+  currentTags = [];
+  currentEditingId = null;
+}
+
+function renderArrayField(fieldId, items, type) {
+  const field = document.getElementById(fieldId);
+  field.innerHTML = '';
+  items.forEach((item, idx) => {
+    field.appendChild(makeArrayItem(item, type, idx));
+  });
+}
+
+function makeArrayItem(value, type, idx) {
+  const wrap = document.createElement('div');
+  wrap.className = 'array-item';
+  wrap.dataset.type = type;
+
+  const ta = document.createElement('textarea');
+  ta.className = 'array-item-input';
+  ta.rows = 2;
+  ta.value = value;
+  ta.placeholder = 'Enter text…';
+
+  const rm = document.createElement('button');
+  rm.className = 'array-remove-btn';
+  rm.textContent = '✕';
+  rm.onclick = () => wrap.remove();
+
+  wrap.appendChild(ta);
+  wrap.appendChild(rm);
+  return wrap;
+}
+
+function addArrayItem(type) {
+  const fieldId = { findings: 'findingsField', limitations: 'limitationsField', implications: 'implicationsField', hooks: 'hooksField' }[type];
+  const field = document.getElementById(fieldId);
+  field.appendChild(makeArrayItem('', type, field.children.length));
+  field.lastChild.querySelector('textarea').focus();
+}
+
+function getArrayValues(fieldId) {
+  return [...document.getElementById(fieldId).querySelectorAll('textarea')]
+    .map(ta => ta.value.trim())
+    .filter(Boolean);
+}
+
+// ── TAG INPUT ──
+function renderTagChips() {
+  const wrap = document.getElementById('tagsWrap');
+  const input = document.getElementById('tagInput');
+  wrap.innerHTML = '';
+  currentTags.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${tag} <span class="tag-chip-remove" onclick="removeTag('${tag}')">✕</span>`;
+    wrap.appendChild(chip);
+  });
+  wrap.appendChild(input);
+  input.value = '';
+}
+
+function removeTag(tag) {
+  currentTags = currentTags.filter(t => t !== tag);
+  renderTagChips();
+}
+
+document.getElementById('tagInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val && !currentTags.includes(val)) {
+      currentTags.push(val);
+      renderTagChips();
+    } else {
+      e.target.value = '';
+    }
+  }
+});
+
+// ── SAVE PAPER ──
+function savePaper(confirmed) {
+  const paper = document.getElementById('reviewModal')._paper || {};
+
+  // Flush any pending tag input
+  const tagInputVal = document.getElementById('tagInput').value.trim();
+  if (tagInputVal && !currentTags.includes(tagInputVal)) currentTags.push(tagInputVal);
+
+  const authorStr = document.getElementById('reviewAuthors').value.trim();
+  const authors = authorStr ? authorStr.split(',').map(a => a.trim()).filter(Boolean) : [];
+  const year = document.getElementById('reviewYear').value.trim();
+  const title = document.getElementById('reviewTitle').value.trim();
+  const journal = document.getElementById('reviewJournal').value.trim();
+  const doi = document.getElementById('reviewDOI').value.trim();
+
+  // Rebuild APA
+  let authorAPA = '';
+  if (authors.length === 1) authorAPA = authors[0];
+  else if (authors.length === 2) authorAPA = authors.join(', & ');
+  else if (authors.length > 2) authorAPA = authors.slice(0,-1).join(', ') + ', & ' + authors[authors.length-1];
+  let apa = `${authorAPA} (${year || 'n.d.'}). ${title}.`;
+  if (journal) apa += ` ${journal}.`;
+  if (doi) apa += ` https://doi.org/${doi}`;
+
+  const updated = {
+    ...paper,
+    id: currentEditingId || paper.id || 'paper_' + Date.now(),
+    title,
+    authors,
+    year,
+    journal,
+    doi,
+    apa_reference: apa,
+    summary: document.getElementById('reviewSummary').value.trim(),
+    methodology: document.getElementById('reviewMethodology').value.trim(),
+    findings: getArrayValues('findingsField'),
+    limitations: getArrayValues('limitationsField'),
+    implications: getArrayValues('implicationsField'),
+    content_hooks: getArrayValues('hooksField'),
+    tags: currentTags,
+    confirmed,
+    date_added: paper.date_added || new Date().toISOString().split('T')[0]
+  };
+
+  // Replace if editing, else add
+  const idx = library.findIndex(p => p.id === updated.id);
+  if (idx >= 0) library[idx] = updated;
+  else library.push(updated);
+
+  closeReviewModal();
+  updateUI();
+  showToast(confirmed ? '✓ Paper confirmed and saved to library' : 'Paper saved as pending');
+  switchPanel('library');
+}
+
+// ── LOAD / EXPORT LIBRARY ──
+document.getElementById('btnLoadLibrary').addEventListener('click', () => document.getElementById('libraryFileInput').click());
+
+document.getElementById('libraryFileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      library = JSON.parse(ev.target.result);
+      updateUI();
+      showToast('Library loaded — ' + library.length + ' papers found');
+    } catch { showToast('Could not parse JSON file'); }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('btnExportLibrary').addEventListener('click', () => {
+  if (library.length === 0) { showToast('Nothing to export yet'); return; }
+  const blob = new Blob([JSON.stringify(library, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'good_thinking_stack_library.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+  showToast('Library exported successfully');
+});
+
+// ── UPDATE UI ──
+function updateUI() {
+  const total     = library.length;
+  const confirmed = library.filter(p => p.confirmed).length;
+  const pending   = total - confirmed;
+  const allTags   = [...new Set(library.flatMap(p => p.tags || []))];
+
+  document.getElementById('paperCount').textContent     = total;
+  document.getElementById('libCount').textContent       = total;
+  document.getElementById('stat-total').textContent     = total;
+  document.getElementById('stat-confirmed').textContent = confirmed;
+  document.getElementById('stat-pending').textContent   = pending;
+  document.getElementById('stat-tags').textContent      = allTags.length;
+
+  const kb = Math.round(JSON.stringify(library).length / 1024);
+  document.getElementById('storageLabel').textContent   = kb + ' KB';
+  document.getElementById('storageBarFill').style.width = Math.min(100, (kb/500)*100) + '%';
+
+  renderRecentPapers();
+  renderTopTags(allTags);
+  renderLibrary();
+}
+
+function renderRecentPapers() {
+  const el = document.getElementById('recentPapers');
+  if (library.length === 0) {
+    el.innerHTML = `<div class="empty-state" style="padding:36px;"><div class="empty-icon">📄</div><div class="empty-title">No papers yet</div><div class="empty-sub">Load your library or add a new paper to get started.</div></div>`;
+    return;
+  }
+  el.innerHTML = [...library].reverse().slice(0,5).map((p,i) => `
+    <div class="recent-paper-item" onclick="openPaperModal('${p.id}')">
+      <span class="paper-index">${String(i+1).padStart(2,'0')}</span>
+      <div class="paper-info">
+        <div class="paper-title-sm">${p.title || 'Untitled'}</div>
+        <div class="paper-meta-sm">${(p.authors||[]).slice(0,2).join(', ')}${(p.authors||[]).length>2?' et al.':''} · ${p.year||'—'}</div>
+      </div>
+      <div class="paper-tags-sm">${(p.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function renderTopTags(tags) {
+  const el = document.getElementById('topTags');
+  if (tags.length === 0) { el.innerHTML = `<span style="font-size:12px;color:var(--muted);">Tags will appear here once papers are added.</span>`; return; }
+  const colors = ['green','blue','orange','','green','blue'];
+  el.innerHTML = tags.slice(0,20).map((t,i)=>`<span class="tag ${colors[i%colors.length]}">${t}</span>`).join('');
+}
+
+function renderLibrary(filter='all', search='') {
+  const el = document.getElementById('libraryList');
+  let papers = [...library].reverse();
+  if (filter === 'confirmed') papers = papers.filter(p => p.confirmed);
+  if (filter === 'pending')   papers = papers.filter(p => !p.confirmed);
+  if (search) {
+    const q = search.toLowerCase();
+    papers = papers.filter(p =>
+      (p.title||'').toLowerCase().includes(q) ||
+      (p.authors||[]).join(' ').toLowerCase().includes(q) ||
+      (p.tags||[]).join(' ').toLowerCase().includes(q) ||
+      (p.summary||'').toLowerCase().includes(q)
+    );
+  }
+  if (papers.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">No papers found</div><div class="empty-sub">Try a different search or filter.</div></div>`;
+    return;
+  }
+  el.innerHTML = papers.map(p => `
+    <div class="paper-card" onclick="openPaperModal('${p.id}')">
+      <div class="paper-card-header">
+        <div class="paper-card-title">${p.title || 'Untitled'}</div>
+        ${p.confirmed ? `<span class="confirmed-badge">✓ Confirmed</span>` : `<span class="pending-badge">⏳ Pending</span>`}
+      </div>
+      <div class="paper-card-authors">${(p.authors||[]).join(', ')} · ${p.year||'—'} · ${p.journal||''}</div>
+      <div class="paper-card-summary">${p.summary || p.abstract || 'No summary yet.'}</div>
+      <div class="paper-card-footer">
+        <div class="paper-card-tags">${(p.tags||[]).slice(0,5).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="paper-card-actions">
+          <button class="icon-btn" onclick="event.stopPropagation();copyAPA('${p.id}')">APA</button>
+          <button class="icon-btn" onclick="event.stopPropagation();openReviewModal(library.find(p=>p.id==='${p.id}'))">Edit</button>
+          <button class="icon-btn icon-btn-danger" onclick="event.stopPropagation();deletePaper('${p.id}')">Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── PAPER DETAIL MODAL ──
+function openPaperModal(id) {
+  const p = library.find(p => p.id === id);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = p.title || 'Untitled';
+  document.getElementById('modalBody').innerHTML = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;">${p.apa_reference||''}</div>
+    <div style="font-size:13px;line-height:1.7;color:var(--muted);margin-bottom:20px;">${p.summary||''}</div>
+    ${p.findings&&p.findings.length ? `<div class="section-title">Key Findings</div><ul style="margin:0 0 16px 16px;font-size:12px;color:var(--text);line-height:1.8;">${p.findings.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
+    ${p.limitations&&p.limitations.length ? `<div class="section-title">Limitations</div><ul style="margin:0 0 16px 16px;font-size:12px;color:var(--muted);line-height:1.8;">${p.limitations.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
+    ${p.implications&&p.implications.length ? `<div class="section-title">Implications</div><ul style="margin:0 0 16px 16px;font-size:12px;color:var(--text);line-height:1.8;">${p.implications.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">${(p.tags||[]).map(t=>`<span class="tag green">${t}</span>`).join('')}</div>
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="copyAPA('${p.id}')">Copy APA</button>
+      <button class="btn btn-accent" onclick="closeModal();openReviewModal(library.find(p=>p.id==='${p.id}'))">Edit Paper</button>
+    </div>`;
+  document.getElementById('paperModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('paperModal').classList.remove('open'); }
+document.getElementById('paperModal').addEventListener('click', e => { if (e.target === document.getElementById('paperModal')) closeModal(); });
+document.getElementById('reviewModal').addEventListener('click', e => { if (e.target === document.getElementById('reviewModal')) closeReviewModal(); });
+
+// ── COPY APA ──
+function copyAPA(id) {
+  const p = library.find(p => p.id === id);
+  if (!p || !p.apa_reference) { showToast('No APA reference found'); return; }
+  navigator.clipboard.writeText(p.apa_reference).then(() => showToast('APA reference copied!'));
+}
+
+
+// ── CONTENT STUDIO ──
+let selectedContentPaper = null;
+let activeContentFormat = 'social';
+let activeContentSource = 'paper';
+
+// Format card selection
+document.querySelectorAll('.format-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.format-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    activeContentFormat = card.dataset.format;
+  });
+});
+
+// Source tab toggle
+document.querySelectorAll('.source-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeContentSource = tab.dataset.source;
+    document.getElementById('sourcePaperPicker').style.display = activeContentSource === 'paper' ? 'block' : 'none';
+    document.getElementById('sourceTopicPicker').style.display = activeContentSource === 'topic' ? 'block' : 'none';
+  });
+});
+
+// Paper search for content studio
+document.getElementById('contentPaperSearch').addEventListener('input', e => {
+  renderContentPaperList(e.target.value);
+});
+
+function renderContentPaperList(search = '') {
+  const el = document.getElementById('contentPaperList');
+  let papers = library.filter(p => p.confirmed);
+  if (search) {
+    const q = search.toLowerCase();
+    papers = papers.filter(p =>
+      (p.title||'').toLowerCase().includes(q) ||
+      (p.tags||[]).join(' ').toLowerCase().includes(q)
+    );
+  }
+  if (papers.length === 0) {
+    el.innerHTML = `<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted);">No confirmed papers found</div>`;
+    return;
+  }
+  el.innerHTML = papers.map(p => `
+    <div class="content-paper-item ${selectedContentPaper === p.id ? 'selected' : ''}" onclick="selectContentPaper('${p.id}')">
+      <div class="content-paper-radio"></div>
+      <div class="content-paper-info">
+        <div class="content-paper-name">${p.title || 'Untitled'}</div>
+        <div class="content-paper-year">${(p.authors||[]).slice(0,1).join('')} · ${p.year||'—'}</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectContentPaper(id) {
+  selectedContentPaper = id;
+  renderContentPaperList(document.getElementById('contentPaperSearch').value);
+}
+
+// Generate button
+document.getElementById('btnGenerate').addEventListener('click', generateContent);
+
+async function generateContent() {
+  const format = activeContentFormat;
+  const source = activeContentSource;
+
+  // Validate inputs
+  if (source === 'paper') {
+    if (!selectedContentPaper) { showToast('Please select a paper first'); return; }
+  } else {
+    const topic = document.getElementById('contentTopicInput').value.trim();
+    if (!topic) { showToast('Please enter a topic or question'); return; }
+    if (library.filter(p=>p.confirmed).length === 0) { showToast('No confirmed papers in library yet'); return; }
+  }
+
+  const outputEl = document.getElementById('contentOutput');
+  outputEl.innerHTML = `
+    <div class="content-generating">
+      <div class="content-generating-spinner"></div>
+      <div class="content-generating-text">Crafting your ${formatLabel(format)}…</div>
+    </div>`;
+
+  try {
+    let paperData;
+    if (source === 'paper') {
+      const p = library.find(p => p.id === selectedContentPaper);
+      paperData = { mode: 'single', paper: p };
+    } else {
+      const topic = document.getElementById('contentTopicInput').value.trim();
+      const relevant = library.filter(p => p.confirmed);
+      paperData = { mode: 'topic', topic, papers: relevant };
+    }
+
+    const result = await callContentAPI(format, paperData);
+    renderContentOutput(format, result, paperData);
+
+  } catch (err) {
+    outputEl.innerHTML = `<div class="output-placeholder">
+      <div class="output-placeholder-icon">⚠</div>
+      <div class="output-placeholder-text">Generation failed: ${err.message || 'Please try again.'}</div>
+    </div>`;
+    console.error(err);
+  }
+}
+
+function formatLabel(format) {
+  return { social: 'Social Caption', podcast: 'Podcast Points', youtube: 'YouTube Outline', live: 'Live Reference Card' }[format] || format;
+}
+
+async function callContentAPI(format, paperData) {
+  const prompts = {
+    social: buildSocialPrompt(paperData),
+    podcast: buildPodcastPrompt(paperData),
+    youtube: buildYoutubePrompt(paperData),
+    live: buildLivePrompt(paperData)
+  };
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompts[format] }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error?.message || 'API request failed');
+  }
+
+  const data = await response.json();
+  const raw = data.content.map(b => b.text || '').join('');
+  const clean = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+  return JSON.parse(clean);
+}
+
+function paperContext(p) {
+  return `Title: ${p.title}
+Authors: ${(p.authors||[]).join(', ')} (${p.year})
+Journal: ${p.journal||''}
+Summary: ${p.summary||''}
+Methodology: ${p.methodology||''}
+Key Findings: ${(p.findings||[]).map((f,i)=>`${i+1}. ${f}`).join('\n')}
+Implications: ${(p.implications||[]).join('; ')}
+Content Hooks: ${(p.content_hooks||[]).join('; ')}
+Tags: ${(p.tags||[]).join(', ')}`;
+}
+
+function buildSocialPrompt(paperData) {
+  const context = paperData.mode === 'single'
+    ? `Single paper:\n${paperContext(paperData.paper)}`
+    : `Topic: ${paperData.topic}\nPapers:\n${paperData.papers.slice(0,5).map(p=>paperContext(p)).join('\n---\n')}`;
+
+  return `You are a social media content creator for a psychology educator and content creator called "goodthinkingwithV". Create engaging, educational social media content based on the research below.
+
+${context}
+
+Return ONLY a valid JSON object:
+{
+  "instagram": {
+    "hook": "One punchy opening line that stops the scroll — make it surprising, relatable or counterintuitive",
+    "body": "3-5 short paragraphs, each 1-3 sentences. Conversational tone. Translate the research into real-life relevance. No jargon.",
+    "cta": "A specific call to action — question, prompt or invitation to engage",
+    "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5", "hashtag6", "hashtag7", "hashtag8"]
+  },
+  "linkedin": {
+    "hook": "Professional but engaging opening line",
+    "body": "3-4 paragraphs. More analytical tone than Instagram. Connect to professional or leadership implications.",
+    "cta": "Professional call to action",
+    "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5"]
+  },
+  "key_stat": "The single most shareable statistic or finding from this research, written as a standalone quote or stat",
+  "source_note": "Brief attribution note e.g. 'Based on: Author et al. (Year)'"
+}
+
+Rules:
+- Instagram tone: warm, relatable, like a knowledgeable friend
+- LinkedIn tone: credible, insightful, professional
+- No academic language — translate everything to plain English
+- Make the research feel relevant to everyday life
+- Return ONLY the JSON`;
+}
+
+function buildPodcastPrompt(paperData) {
+  const context = paperData.mode === 'single'
+    ? `Single paper:\n${paperContext(paperData.paper)}`
+    : `Topic: ${paperData.topic}\nPapers:\n${paperData.papers.slice(0,6).map(p=>paperContext(p)).join('\n---\n')}`;
+
+  return `You are a podcast producer for "goodthinkingwithV", a psychology podcast. Create structured talking points for a podcast episode based on this research.
+
+${context}
+
+Return ONLY a valid JSON object:
+{
+  "episode_title": "Compelling episode title",
+  "episode_hook": "1-2 sentences the host says at the very start to hook listeners",
+  "segments": [
+    {
+      "num": 1,
+      "title": "Segment title",
+      "duration": "~3 min",
+      "points": [
+        "Talking point — specific, conversational, with real-life context",
+        "Another point"
+      ],
+      "transition": "Brief sentence to transition to next segment"
+    }
+  ],
+  "key_quotes": [
+    "A memorable, quotable line the host can say based on this research",
+    "Another quotable line"
+  ],
+  "closing_takeaway": "The one thing listeners should remember — simple and powerful",
+  "source_note": "Brief attribution"
+}
+
+Rules:
+- 4-6 segments total
+- Each segment 3-5 talking points
+- Points should sound natural when spoken aloud
+- Include concrete examples or analogies where relevant
+- Return ONLY the JSON`;
+}
+
+function buildYoutubePrompt(paperData) {
+  const context = paperData.mode === 'single'
+    ? `Single paper:\n${paperContext(paperData.paper)}`
+    : `Topic: ${paperData.topic}\nPapers:\n${paperData.papers.slice(0,6).map(p=>paperContext(p)).join('\n---\n')}`;
+
+  return `You are a YouTube script producer for "goodthinkingwithV", a psychology education channel. Create a video script outline based on this research.
+
+${context}
+
+Return ONLY a valid JSON object:
+{
+  "video_title": "SEO-friendly, curiosity-driving YouTube title (include a number or 'why' if natural)",
+  "thumbnail_text": "3-5 words for the thumbnail overlay",
+  "hook_script": "First 30 seconds of spoken script — must hook immediately, tease the payoff",
+  "sections": [
+    {
+      "timestamp": "0:00",
+      "label": "Intro",
+      "title": "Section title",
+      "script_notes": "What to cover in this section — 3-5 bullet points",
+      "b_roll": "Suggested visuals or on-screen text"
+    }
+  ],
+  "pattern_interrupts": [
+    "A surprising or counterintuitive fact to use mid-video to re-engage viewers",
+    "Another pattern interrupt"
+  ],
+  "description_blurb": "First 2 sentences of the YouTube description — include the key topic and a search-friendly phrase",
+  "source_note": "Brief attribution"
+}
+
+Rules:
+- 5-7 sections including intro and outro
+- Include timestamps (approximate)
+- script_notes should be actionable for the creator
+- Return ONLY the JSON`;
+}
+
+function buildLivePrompt(paperData) {
+  const context = paperData.mode === 'single'
+    ? `Single paper:\n${paperContext(paperData.paper)}`
+    : `Topic: ${paperData.topic}\nPapers:\n${paperData.papers.slice(0,5).map(p=>paperContext(p)).join('\n---\n')}`;
+
+  return `You are creating a quick-reference card for "goodthinkingwithV" to use during an Instagram Live session about this research. The card must be glanceable — the host looks at it for 2 seconds and knows what to say next.
+
+${context}
+
+Return ONLY a valid JSON object:
+{
+  "live_title": "Short punchy title for the Live session",
+  "opening_line": "Exactly what to say to open the Live — 1-2 sentences",
+  "cards": [
+    {
+      "card_title": "Short card title (3-5 words)",
+      "bullets": [
+        "Short, punchy bullet point — 1 line max",
+        "Another bullet"
+      ],
+      "stat": "Optional: a key statistic to mention",
+      "plain_english": "One sentence that translates this into plain English for the audience"
+    }
+  ],
+  "audience_questions": [
+    "A question to ask your audience during the Live",
+    "Another engagement question"
+  ],
+  "closing_line": "Exactly what to say to close — memorable and actionable",
+  "source_note": "Brief attribution"
+}
+
+Rules:
+- 3-5 cards total
+- Bullets max 10 words each — these are glance references, not essays
+- stat field is optional — only include if there's a genuinely compelling number
+- Return ONLY the JSON`;
+}
+
+// ── RENDER OUTPUT ──
+function renderContentOutput(format, data, paperData) {
+  const el = document.getElementById('contentOutput');
+  const sourceNote = data.source_note || '';
+
+  if (format === 'social') renderSocialOutput(el, data, sourceNote);
+  else if (format === 'podcast') renderPodcastOutput(el, data, sourceNote);
+  else if (format === 'youtube') renderYoutubeOutput(el, data, sourceNote);
+  else if (format === 'live') renderLiveOutput(el, data, sourceNote);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+}
+
+function renderSocialOutput(el, data, sourceNote) {
+  const ig = data.instagram || {};
+  const li = data.linkedin || {};
+
+
+  window._copyIG = (ig.hook ? ig.hook + "\n\n" : '') + (ig.body||'') + "\n\n" + (ig.cta||'') + "\n\n" + (ig.hashtags||[]).map(h=>'#'+h.replace(/^#/,'')).join(' ');
+  window._copyLI = (li.hook ? li.hook + "\n\n" : '') + (li.body||'') + "\n\n" + (li.cta||'') + "\n\n" + (li.hashtags||[]).map(h=>'#'+h.replace(/^#/,'')).join(' ');
+
+  const igText = (ig.hook ? '<strong>' + ig.hook + '</strong>' + "\n\n" : '') + (ig.body||'') + "\n\n" + (ig.cta||'');
+  const liText = (li.hook ? '<strong>' + li.hook + '</strong>' + "\n\n" : '') + (li.body||'') + "\n\n" + (li.cta||'');
+  const igHashtags = ig.hashtags ? ig.hashtags.map(h=>'#'+h.replace(/^#/,'')).join(' ') : '';
+  const liHashtags = li.hashtags ? li.hashtags.map(h=>'#'+h.replace(/^#/,'')).join(' ') : '';
+
+  let out = '<div class="output-social">';
+
+  if (data.key_stat) {
+    out += '<div class="output-block"><div class="output-block-label">&#11088; Key Stat / Quote</div>';
+    out += '<div class="output-block-text" style="font-size:15px;font-style:italic;color:var(--accent);">&ldquo;' + data.key_stat + '&rdquo;</div></div>';
+  }
+
+  out += '<div class="output-block"><div class="output-block-label">&#128241; Instagram Post</div>';
+  out += '<div class="output-block-text" style="white-space:pre-wrap;">' + igText + '</div>';
+  if (igHashtags) out += '<div class="output-block-hashtags">' + igHashtags + '</div>';
+  out += '<div class="output-actions"><button class="btn btn-ghost" onclick="copyText(window._copyIG)">Copy Instagram</button></div></div>';
+
+  out += '<div class="output-block"><div class="output-block-label">&#128188; LinkedIn Post</div>';
+  out += '<div class="output-block-text" style="white-space:pre-wrap;">' + liText + '</div>';
+  if (liHashtags) out += '<div class="output-block-hashtags">' + liHashtags + '</div>';
+  out += '<div class="output-actions"><button class="btn btn-ghost" onclick="copyText(window._copyLI)">Copy LinkedIn</button></div></div>';
+
+  out += '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted);padding:0 4px;">' + sourceNote + '</div>';
+  out += '</div>';
+  el.innerHTML = out;
+}
+
+
+function renderPodcastOutput(el, data, sourceNote) {
+  const segments = data.segments || [];
+  window._podcastData = data;
+  el.innerHTML = `<div class="output-podcast">
+
+    <div class="output-block" style="margin-bottom:20px;">
+      <div class="output-block-label">🎙️ Episode</div>
+      <div style="font-family:'Inter',sans-serif;font-size:18px;color:var(--text);margin-bottom:8px;">${data.episode_title||''}</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;font-style:italic;">"${data.episode_hook||''}"</div>
+    </div>
+
+    ${segments.map(s => `
+    <div class="podcast-segment">
+      <div class="podcast-segment-header">
+        <div class="podcast-segment-num">${s.num}</div>
+        <div class="podcast-segment-title">${s.title||''}</div>
+        <div class="podcast-segment-duration">${s.duration||''}</div>
+      </div>
+      ${(s.points||[]).map(pt=>`<div class="podcast-point">${pt}</div>`).join('')}
+      ${s.transition ? `<div style="font-size:11px;color:var(--accent2);margin-top:8px;font-style:italic;">→ ${s.transition}</div>` : ''}
+    </div>`).join('')}
+
+    ${data.key_quotes&&data.key_quotes.length ? `
+    <div class="output-block">
+      <div class="output-block-label">💬 Quotable Lines</div>
+      ${data.key_quotes.map(q=>`<div style="font-size:13px;color:var(--accent);font-style:italic;line-height:1.7;margin-bottom:6px;">"${q}"</div>`).join('')}
+    </div>` : ''}
+
+    <div class="output-block">
+      <div class="output-block-label">🏁 Closing Takeaway</div>
+      <div class="output-block-text">${data.closing_takeaway||''}</div>
+    </div>
+
+    <div class="output-actions">
+      <button class="btn btn-ghost" onclick="copyPodcastScript()">Copy All Points</button>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px;">${sourceNote}</div>
+  </div>`;
+}
+
+function copyPodcastScript() {
+  const data = window._podcastData || {};
+  let text = `${data.episode_title}\n\nHOOK: ${data.episode_hook}\n\n`;
+  (data.segments||[]).forEach(s => {
+    text += `SEGMENT ${s.num}: ${s.title} (${s.duration})\n`;
+    (s.points||[]).forEach(p => text += `  · ${p}\n`);
+    if (s.transition) text += `  → ${s.transition}\n`;
+    text += '\n';
+  });
+  text += `CLOSING: ${data.closing_takeaway}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Podcast script copied!'));
+}
+
+function renderYoutubeOutput(el, data, sourceNote) {
+  const sections = data.sections || [];
+  window._copyYTHook = data.hook_script || '';
+  window._copyYTDesc = data.description_blurb || '';
+  el.innerHTML = `<div class="output-youtube">
+
+    <div class="output-block" style="margin-bottom:20px;">
+      <div class="output-block-label">🎬 Video</div>
+      <div style="font-family:'Inter',sans-serif;font-size:18px;color:var(--text);margin-bottom:6px;">${data.video_title||''}</div>
+      <div style="display:inline-block;background:rgba(240,160,110,0.15);border:1px solid rgba(240,160,110,0.3);border-radius:4px;padding:2px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent3);">THUMBNAIL: ${data.thumbnail_text||''}</div>
+    </div>
+
+    <div class="output-block" style="margin-bottom:20px;">
+      <div class="output-block-label">⚡ Hook Script (0:00 – 0:30)</div>
+      <div class="output-block-text" style="font-style:italic;">${data.hook_script||''}</div>
+      <div class="output-actions">
+        <button class="btn btn-ghost" onclick="copyText(window._copyYTHook)">Copy Hook</button>
+      </div>
+    </div>
+
+    ${sections.map(s => `
+    <div class="yt-section">
+      <div class="yt-section-label">${s.label||''} <span class="yt-timestamp">${s.timestamp||''}</span></div>
+      <div class="yt-section-title">${s.title||''}</div>
+      ${(s.script_notes||[]).map ? (s.script_notes||[]).map(pt=>`<div class="yt-point">${pt}</div>`).join('') : `<div class="yt-point">${s.script_notes}</div>`}
+      ${s.b_roll ? `<div style="font-size:11px;color:var(--accent2);margin-top:6px;">📷 ${s.b_roll}</div>` : ''}
+    </div>`).join('')}
+
+    ${data.pattern_interrupts&&data.pattern_interrupts.length ? `
+    <div class="output-block">
+      <div class="output-block-label">⚡ Pattern Interrupts</div>
+      ${data.pattern_interrupts.map(pi=>`<div class="yt-point">${pi}</div>`).join('')}
+    </div>` : ''}
+
+    ${data.description_blurb ? `
+    <div class="output-block">
+      <div class="output-block-label">📝 Description Opening</div>
+      <div class="output-block-text">${data.description_blurb}</div>
+      <div class="output-actions">
+        <button class="btn btn-ghost" onclick="copyText(window._copyYTDesc)">Copy Description</button>
+      </div>
+    </div>` : ''}
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px;">${sourceNote}</div>
+  </div>`;
+}
+
+function renderLiveOutput(el, data, sourceNote) {
+  const cards = data.cards || [];
+  window._liveData = data;
+  el.innerHTML = `<div class="output-live">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-family:'Inter',sans-serif;font-size:20px;color:var(--text);">${data.live_title||''}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic;">"${data.opening_line||''}"</div>
+      </div>
+      <button class="btn btn-ghost" onclick="copyLiveCard()">Copy All Cards</button>
+    </div>
+
+    ${cards.map((card, i) => `
+    <div class="live-card">
+      <div class="live-card-title">${String(i+1).padStart(2,'0')} — ${card.card_title||''}</div>
+      ${(card.bullets||[]).map(b=>`
+        <div class="live-bullet">
+          <div class="live-bullet-dot"></div>
+          <div>${b}</div>
+        </div>`).join('')}
+      ${card.stat ? `<div class="live-stat">📊 ${card.stat}</div>` : ''}
+      ${card.plain_english ? `<div style="font-size:12px;color:var(--accent2);margin-top:10px;font-style:italic;">In plain English: "${card.plain_english}"</div>` : ''}
+    </div>`).join('')}
+
+    ${data.audience_questions&&data.audience_questions.length ? `
+    <div class="output-block">
+      <div class="output-block-label">💬 Audience Questions</div>
+      ${data.audience_questions.map(q=>`<div class="live-bullet"><div class="live-bullet-dot"></div><div>${q}</div></div>`).join('')}
+    </div>` : ''}
+
+    <div class="output-block">
+      <div class="output-block-label">🏁 Closing Line</div>
+      <div class="output-block-text" style="font-style:italic;">"${data.closing_line||''}"</div>
+    </div>
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-top:4px;">${sourceNote}</div>
+  </div>`;
+}
+
+function copyLiveCard() {
+  const data = window._liveData || {};
+  let text = `${data.live_title}\nOPENING: ${data.opening_line}\n\n`;
+  (data.cards||[]).forEach((c,i) => {
+    text += `CARD ${i+1}: ${c.card_title}\n`;
+    (c.bullets||[]).forEach(b => text += `  · ${b}\n`);
+    if (c.stat) text += `  📊 ${c.stat}\n`;
+    text += '\n';
+  });
+  text += `CLOSING: ${data.closing_line}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Live cards copied!'));
+}
+
+// ── RETRIEVAL ──
+document.getElementById('btnRetrieve').addEventListener('click', () => runRetrieval());
+
+document.getElementById('retrievalQuery').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runRetrieval();
+});
+
+async function runRetrieval() {
+  const q = document.getElementById('retrievalQuery').value.trim();
+  if (!q) return;
+
+  const confirmed = library.filter(p => p.confirmed);
+  if (confirmed.length === 0) {
+    showToast('No confirmed papers in library yet — confirm some papers first');
+    return;
+  }
+
+  const resultsEl = document.getElementById('retrievalResults');
+
+  // Show loading state
+  resultsEl.innerHTML = `
+    <div class="retrieval-loading">
+      <div class="retrieval-spinner"></div>
+      <div class="retrieval-loading-text">Claude is searching your library…</div>
+    </div>`;
+
+  try {
+    const paperSummaries = confirmed.map(p => ({
+      id: p.id,
+      title: p.title,
+      authors: (p.authors||[]).slice(0,3).join(', '),
+      year: p.year,
+      summary: p.summary,
+      methodology: p.methodology,
+      findings: p.findings || [],
+      implications: p.implications || [],
+      tags: p.tags || [],
+      content_hooks: p.content_hooks || []
+    }));
+
+    const prompt = `You are a research assistant helping a psychology researcher find the most relevant papers for a research question.
+
+Research question: "${q}"
+
+Library of papers (${paperSummaries.length} confirmed papers):
+${JSON.stringify(paperSummaries, null, 2)}
+
+Analyse how well each paper supports or relates to the research question. Return ONLY a valid JSON object with no preamble, markdown, or extra text:
+
+{
+  "synthesis": "2-4 sentences synthesising what the library collectively says about this research question. Be specific about which papers converge or diverge.",
+  "results": [
+    {
+      "id": "paper id from the library",
+      "relevance_score": 85,
+      "relevance_label": "High",
+      "why_relevant": "1-2 sentences explaining exactly WHY this paper is relevant to the question — be specific",
+      "supporting_points": [
+        "Specific finding or point from this paper that directly supports the research question",
+        "Another specific point"
+      ]
+    }
+  ]
+}
+
+Rules:
+- relevance_score: integer 0-100
+- relevance_label: "High" (70-100), "Medium" (40-69), "Low" (1-39), omit papers scoring 0
+- Sort results by relevance_score descending
+- supporting_points: 2-4 specific points drawn from the paper's actual findings, implications or tags — NOT generic statements
+- Only include papers with a score > 0
+- Return ONLY the JSON object`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API request failed');
+    }
+
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+    const parsed = JSON.parse(clean);
+
+    renderRetrievalResults(parsed, q);
+
+  } catch (err) {
+    resultsEl.innerHTML = `<div class="empty-state" style="padding:40px 0;">
+      <div class="empty-icon">⚠</div>
+      <div class="empty-title">Retrieval failed</div>
+      <div class="empty-sub">${err.message || 'Something went wrong — please try again.'}</div>
+    </div>`;
+    console.error(err);
+  }
+}
+
+function renderRetrievalResults(data, query) {
+  const resultsEl = document.getElementById('retrievalResults');
+  const results = data.results || [];
+
+  if (results.length === 0) {
+    resultsEl.innerHTML = `<div class="empty-state" style="padding:40px 0;">
+      <div class="empty-icon">◎</div>
+      <div class="empty-title">No relevant papers found</div>
+      <div class="empty-sub">Try rephrasing your question or add more papers to your library.</div>
+    </div>`;
+    return;
+  }
+
+  // Enrich results with full paper data
+  const enriched = results.map(r => ({
+    ...r,
+    paper: library.find(p => p.id === r.id)
+  })).filter(r => r.paper);
+
+  let html = '';
+
+  // Synthesis block
+  if (data.synthesis) {
+    html += `
+    <div class="synthesis-box">
+      <div class="synthesis-label">Library Synthesis</div>
+      <div class="synthesis-text">${data.synthesis}</div>
+    </div>`;
+  }
+
+  // Results header
+  html += `
+  <div class="results-header">
+    <div class="section-title" style="margin:0;">Matched Papers</div>
+    <div class="results-count"><span>${enriched.length}</span> paper${enriched.length !== 1 ? 's' : ''} matched</div>
+  </div>`;
+
+  // Result cards
+  enriched.forEach(r => {
+    const p = r.paper;
+    const ringClass = r.relevance_label === 'High' ? 'relevance-high' : r.relevance_label === 'Medium' ? 'relevance-med' : 'relevance-low';
+    const authors = (p.authors||[]).slice(0,2).join(', ') + ((p.authors||[]).length > 2 ? ' et al.' : '');
+
+    html += `
+    <div class="result-card" onclick="openPaperModal('${p.id}')">
+      <div class="result-card-top">
+        <div>
+          <div class="result-card-title">${p.title || 'Untitled'}</div>
+          <div class="result-card-meta">${authors} · ${p.year||'—'} · ${p.journal||''}</div>
+        </div>
+        <div class="relevance-badge">
+          <div class="relevance-ring ${ringClass}">${r.relevance_score}</div>
+        </div>
+      </div>
+
+      <div class="result-why">
+        <div class="result-why-label">Why Relevant</div>
+        ${r.why_relevant || ''}
+      </div>
+
+      ${r.supporting_points && r.supporting_points.length ? `
+      <div class="result-supporting">
+        <div class="result-supporting-label">Supporting Points</div>
+        ${r.supporting_points.map(pt => `<div class="result-supporting-item">${pt}</div>`).join('')}
+      </div>` : ''}
+
+      <div class="result-card-footer">
+        <div class="result-tags">${(p.tags||[]).slice(0,4).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="result-actions">
+          <button class="icon-btn" onclick="event.stopPropagation();copyAPA('${p.id}')">Copy APA</button>
+          <button class="icon-btn" onclick="event.stopPropagation();openPaperModal('${p.id}')">View →</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  resultsEl.innerHTML = html;
+}
+
+// ── DELETE PAPER ──
+function deletePaper(id) {
+  const paper = library.find(p => p.id === id);
+  if (!paper) return;
+  const title = paper.title || 'this paper';
+  if (!confirm('Remove "' + title + '" from your library?\n\nThis cannot be undone — export your library first if you want to keep a backup.')) return;
+  library = library.filter(p => p.id !== id);
+  updateUI();
+  showToast('Paper removed from library');
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── DEMO DATA ──
+library = [
+  {
+    id: 'demo1',
+    title: 'Attachment Styles and Social Media Use in Young Adults',
+    authors: ['Hofmann, S. G.', 'Carpenter, J. K.', 'Curtiss, J.'],
+    year: '2021', journal: 'Psychological Science',
+    doi: '10.1177/0956797621990356',
+    apa_reference: 'Hofmann, S. G., Carpenter, J. K., & Curtiss, J. (2021). Attachment styles and social media use in young adults. Psychological Science, 32(4), 512–524. https://doi.org/10.1177/0956797621990356',
+    abstract: 'This study examines the relationship between adult attachment styles and patterns of social media use.',
+    summary: 'Adults with anxious attachment styles showed significantly higher social media engagement and reported greater emotional dependence on online validation.',
+    methodology: 'Cross-sectional survey of 412 young adults aged 18-30. Measured attachment style (ECR-R), daily social media use (self-report), and FoMO scale.',
+    findings: ['Anxious attachment predicted higher daily social media use (β = 0.42, p < .001)','Avoidant attachment was negatively associated with social media use','Fear of missing out (FoMO) mediated the attachment–social media relationship'],
+    limitations: ['Cross-sectional design limits causal inference','Self-reported measures subject to response bias'],
+    implications: ['Attachment-informed interventions for problematic social media use','FoMO as a therapeutic target in digital wellbeing programmes'],
+    tags: ['attachment theory','social media','FoMO','young adults','anxiety','digital wellbeing'],
+    content_hooks: ['People with anxious attachment literally use social media to self-soothe','FoMO is the mechanism — not just a side effect'],
+    confirmed: true, date_added: '2025-01-15'
+  },
+  {
+    id: 'demo2',
+    title: 'Mindfulness-Based Interventions for Stress Reduction: A Meta-Analysis',
+    authors: ['Khoury, B.', 'Lecomte, T.', 'Fortin, G.'],
+    year: '2020', journal: 'Clinical Psychology Review',
+    doi: '10.1016/j.cpr.2020.101864',
+    apa_reference: 'Khoury, B., Lecomte, T., & Fortin, G. (2020). Mindfulness-based interventions for stress reduction: A meta-analysis. Clinical Psychology Review, 78, 101864. https://doi.org/10.1016/j.cpr.2020.101864',
+    abstract: 'A comprehensive meta-analysis of 209 studies examining mindfulness-based stress reduction.',
+    summary: 'MBI programs showed moderate-to-large effects on stress, anxiety and depression outcomes across diverse populations.',
+    methodology: 'Systematic review and meta-analysis of 209 RCTs. Effect sizes calculated using Hedges g. Heterogeneity assessed via I² statistic.',
+    findings: ['Overall effect size d = 0.63 across all outcomes','Stronger effects in clinical versus non-clinical samples','Programme length > 8 weeks showed significantly greater benefits'],
+    limitations: ['High heterogeneity across included studies','Publication bias likely inflates effect sizes'],
+    implications: ['8-week minimum recommended for clinical implementation','Dosage matters — shorter programmes may be insufficient'],
+    tags: ['mindfulness','MBI','stress','meta-analysis','anxiety','depression','intervention'],
+    content_hooks: ['8 weeks of mindfulness creates measurable brain and behaviour changes','Clinical populations benefit more than healthy adults — counter-intuitive but true'],
+    confirmed: false, date_added: '2025-01-18'
+  }
+];
+
+updateUI();
+</script>
+</body>
+</html>
