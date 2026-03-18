@@ -30,6 +30,41 @@
     font-size: 14px;
   }
 
+
+  /* API KEY INPUT */
+  .api-key-wrap {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .api-key-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 12px; color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    outline: none; width: 240px; transition: border-color 0.2s;
+  }
+  .api-key-input:focus { border-color: var(--accent); }
+  .api-key-input::placeholder { color: var(--muted); }
+
+  .api-status {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(58,125,68,0.08); border: 1px solid rgba(58,125,68,0.25);
+    border-radius: 20px; padding: 4px 12px;
+  }
+  .api-status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0;
+    box-shadow: 0 0 4px rgba(58,125,68,0.4);
+  }
+  .api-status-text {
+    font-size: 11px; font-weight: 600; color: var(--accent);
+    font-family: 'Inter', sans-serif;
+  }
+  .api-status-clear {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 11px; padding: 0; margin-left: 2px;
+    transition: color 0.15s;
+  }
+  .api-status-clear:hover { color: var(--danger); }
+
   /* TOP BAR */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
@@ -919,6 +954,14 @@ let library = [];
 let currentTags = [];
 let currentEditingId = null;
 
+function getHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+}
+
 // PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -1073,7 +1116,7 @@ ${truncated}`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
@@ -1573,7 +1616,7 @@ async function callContentAPI(format, paperData) {
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
@@ -2036,7 +2079,7 @@ Rules:
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
